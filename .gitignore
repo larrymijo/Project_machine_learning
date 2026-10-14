@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data: downloaded from the source (see README), never committed
+data/raw/
+data/processed/*
+!data/processed/.gitkeep
+
+# Exported report / slide PDFs (the .docx / .pptx sources are committed)
+reports/*.pdf
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+~$*

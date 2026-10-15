@@ -10,7 +10,7 @@ A regression project in the **Sports** area: predict the **home and away score**
 | **Problem type** | Regression (two targets: home goals, away goals) |
 | **Algorithm 1** | Linear Regression **implemented from scratch** in NumPy |
 | **Algorithm 2** | Random Forest Regressor (scikit-learn) |
-| **Training data** | All international matches 1994 → Aug 2023 (26,845) |
+| **Training data** | International matches between FIFA national teams, 1994 → Aug 2023 (25,266) |
 | **Main test set** | The 90 CONMEBOL qualifiers of the 2026 World Cup cycle (Sep 2023 → Sep 2025) |
 
 The full plan — decisions, features, timeline, work split — is in **[docs/PLAN.md](docs/PLAN.md)**.
@@ -71,7 +71,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 ## Status
 
 - [x] Phase 0 — Setup, data, plan (13 Oct)
-- [ ] Phase 1 — Load, clean, explore
+- [x] Phase 1 — Load, clean, explore (15 Oct)
 - [ ] Phase 2 — Feature engineering + leakage tests
 - [ ] Phase 3 — Linear Regression from scratch + tests
 - [ ] Phase 4 — Chronological split, baselines, Algorithm 1 results

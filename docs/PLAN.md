@@ -70,8 +70,8 @@ Facts that shape the design (computed on 13 Oct):
 | | Matches | Notes |
 |---|---|---|
 | All matches since 1994 | 30,435 | 324 teams |
-| Training window 1994-01-01 → 2023-08-31 | **26,845** | |
-| Test window 2023-09-01 → 2025-09-09 | 2,375 | all internationals in the 2026 qualifying period |
+| Training window 1994-01-01 → 2023-08-31 | 26,845 → **25,266** after the FIFA-team filter | |
+| Test window 2023-09-01 → 2025-09-09 | 2,375 → **2,269** after the FIFA-team filter | all internationals in the 2026 qualifying period |
 | CONMEBOL vs CONMEBOL World Cup qualifiers | 886 in total, 683 since 1996 | round-robin format since the 1998 qualifiers |
 | **2026 qualifying cycle (main test set)** | **90** | Sep 2023 → Sep 2025, 18 rounds × 5 matches |
 | After the test window (incl. 104 World Cup 2026 matches) | 1,215 | optional bonus check |
@@ -89,8 +89,8 @@ Home scores since 1994: 0 goals 26%, 1 goal 30%, 2 goals 22%, 3 goals 11%, 6+ go
 | Decision | Choice | Why |
 |---|---|---|
 | **Target** | **Home score and away score** (two targets) | Agreed 13 Oct. Gives a real scoreline. Both algorithms handle the two targets at once: our scratch model fits a θ with 2 columns (one per target), `RandomForestRegressor` supports multi-output natively — same features, one fit, two predictions |
-| **Training data** | **All international matches since 1994** | Only ~600 CONMEBOL qualifiers exist before the test cycle — too few for a forest. Agreed 13 Oct |
-| **Test data** | **The 90 CONMEBOL qualifiers of the 2026 cycle** (+ all 2,375 matches in the same window as a secondary, more stable test) | Answers our topic directly; the larger set shows whether the result holds in general |
+| **Training data** | **All international matches since 1994 between FIFA national teams** (teams that have played a World Cup or World Cup qualifier): **25,266** matches | Only ~600 CONMEBOL qualifiers exist before the test cycle — too few for a forest. Agreed 13 Oct. The FIFA-team filter (added 15 Oct) removes 120 regional/unrecognised teams (Catalonia, Tibet, …) and their extreme results |
+| **Test data** | **The 90 CONMEBOL qualifiers of the 2026 cycle** (+ all 2,269 FIFA-team matches in the same window as a secondary, more stable test) | Answers our topic directly; the larger set shows whether the result holds in general |
 | **Split** | **Chronological**: train < 1 Sep 2023 ≤ test | Matches are a time series. A random 80/20 split would let the model learn from *future* matches and give an over-optimistic score (Obsidian *Model Evaluation and Cross-Validation*: "never shuffle time series") |
 | **Validation / tuning** | `TimeSeriesSplit(n_splits=5)` on the training window | Each fold trains on the past and validates on the following period |
 | **Features** | Pre-match only (§6) | A feature that uses the match itself, or any later match, is leakage |
@@ -111,7 +111,7 @@ Every feature for a match on date *d* is computed **only from matches before *d*
 | **Venue** | `neutral` (0/1) | In CONMEBOL qualifiers since 1996 home teams average 1.64 goals and away teams 0.90 — a gap of ≈ 0.7 goals |
 | **Match importance** | Elo `K` value of the tournament (20–60) or a one-hot of 5 groups | Friendlies are played differently from qualifiers |
 | **Year** | Calendar year | Long-term trends in scoring |
-| *Stretch:* **altitude** | Venue altitude in metres for high cities (La Paz 3,640, El Alto ≈ 4,100, Quito ≈ 2,850, Bogotá ≈ 2,640, …), 0 otherwise | A CONMEBOL-specific effect; small hand-made lookup table, documented |
+| **Altitude** *(promoted from stretch after Phase 1)* | Venue altitude in metres for high cities (La Paz 3,640, El Alto ≈ 4,100, Quito ≈ 2,850, Bogotá ≈ 2,640, …), 0 otherwise | Phase 1: Bolivia takes 1.59 points per game at home vs 0.13 away, Ecuador 2.13 vs 0.72 — the largest home/away gaps in CONMEBOL. Small hand-made lookup table, documented |
 | *Stretch:* **rest days** | Days since the team's previous match | |
 
 **Leakage tests** (`tests/test_features.py`):
@@ -165,7 +165,7 @@ Note for the report: predictions are continuous (e.g. 1.43 goals) and can in pri
 | What | How |
 |---|---|
 | **Baselines** | (1) Dummy: mean home and away score of the training window; (2) home advantage: mean scores of non-neutral training matches |
-| **Main metrics** | MAE, MSE, RMSE, R² — for home goals, away goals and the average — on the **90 CONMEBOL qualifiers** and on all **2,375** test-window matches |
+| **Main metrics** | MAE, MSE, RMSE, R² — for home goals, away goals and the average — on the **90 CONMEBOL qualifiers** and on all **2,269** test-window matches |
 | **Secondary metrics** | Win/draw/loss accuracy from the predicted goal difference (draw band chosen on the training data) · exact-score hit rate after rounding |
 | **Overfitting check** | Train vs test scores for both models |
 | **Interpretation** | Scratch-LR coefficients · permutation importance for both models · residuals vs predicted · error per team and venue (altitude matches, big favourites) |
@@ -227,7 +227,7 @@ Project_machine_learning/
 |---|---|
 | Weak predictive power (football is noisy) | Set expectations early; compare against baselines; add W/D/L accuracy so results are interpretable |
 | Leakage through features | Strict pre-match computation, chronological split, leakage tests in `tests/` |
-| Small main test set (90 matches) | Also report all 2,375 test-window matches; optional bootstrap confidence interval |
+| Small main test set (90 matches) | Also report all 2,269 test-window matches; optional bootstrap confidence interval |
 | Scratch LR bugs / numerical problems | Standardise features, `np.linalg.solve`, gradient descent cross-checked against the normal equation in tests |
 | Time (12 days, labs in parallel) | Stretch features are optional; results frozen on Wed 21 |
 | Unclear rules | Ask the teacher the questions in §14 early (this week) |

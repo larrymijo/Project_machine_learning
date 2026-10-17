@@ -114,6 +114,8 @@ Every feature for a match on date *d* is computed **only from matches before *d*
 | **Altitude** *(promoted from stretch after Phase 1)* | Venue altitude in metres for high cities (La Paz 3,640, El Alto ≈ 4,100, Quito ≈ 2,850, Bogotá ≈ 2,640, …), 0 otherwise | Phase 1: Bolivia takes 1.59 points per game at home vs 0.13 away, Ecuador 2.13 vs 0.72 — the largest home/away gaps in CONMEBOL. Small hand-made lookup table, documented |
 | *Stretch:* **rest days** | Days since the team's previous match | |
 
+**Status 18 Oct — implemented** in `src/features.py`: 17 model features (`FEATURES`): `elo_home`, `elo_away`, six form columns, `h2h_gd`, `h2h_n`, `neutral`, `altitude_km`, four tournament-group dummies (friendly = reference) and `year`. `elo_diff` is kept for analysis only (it is `elo_home − elo_away`, so including it would make the normal equation singular). Rest days were not added (stretch). 9 training rows (debut matches of new teams) have no form → filled with training medians in Phase 4.
+
 **Leakage tests** (`tests/test_features.py`):
 - The first ever match of a team gets the start values (Elo 1500, no form).
 - Changing the score of a match changes **no** feature of that match or of earlier matches — only of later ones.

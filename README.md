@@ -73,7 +73,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 - [x] Phase 0 — Setup, data, plan (13 Oct)
 - [x] Phase 1 — Load, clean, explore (15 Oct)
 - [x] Phase 2 — Feature engineering + leakage tests (18 Oct)
-- [ ] Phase 3 — Linear Regression from scratch + tests
+- [x] Phase 3 — Linear Regression from scratch + tests (18 Oct)
 - [ ] Phase 4 — Chronological split, baselines, Algorithm 1 results
 - [ ] Phase 5 — Random Forest + tuning
 - [ ] Phase 6 — Evaluation, comparison, figures

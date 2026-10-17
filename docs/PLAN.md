@@ -145,6 +145,8 @@ class LinearRegressionScratch:
 | Correctness tests (`tests/test_linear_regression.py`) | Synthetic data with a known θ → both methods recover it; gradient descent ≈ normal equation (`np.allclose`); the loss never increases for a small learning rate |
 | Interpretation | Standardised coefficients per target (e.g. "+1 SD of Elo difference → +0.4 home goals") |
 
+**Status 18 Oct — implemented** (`src/linear_regression.py`, 10 tests). On the training data: normal equation 0.03 s; gradient descent η = 0.1 → 414 iterations, θ within 7·10⁻⁶ of the normal equation; stable for η < 0.27 (largest eigenvalue 3.70), η = 0.3 diverges. Training R² 0.28 (home) / 0.23 (away). λ tuning follows in Phase 4.
+
 Note for the report: predictions are continuous (e.g. 1.43 goals) and can in principle be negative — we clip at 0 for the scoreline and discuss it as a limitation of a linear model for count data.
 
 ## 8. Algorithm 2 — Random Forest Regressor
@@ -190,7 +192,7 @@ Project_machine_learning/
 └── reports/               report (.docx) and slides
 ```
 
-**Notebook = the guidelines' 11 steps:** 1 Import libraries · 2 Load the dataset · 3 Explore the data · 4 Preprocess · 5 Define features and target · 6 Chronological train/test split · **7 Algorithm 1 from scratch (class shown in full)** · 8 Random Forest · 9 Evaluate both · 10 Compare · 11 Visualisations. Data cleaning and feature code live in `src/` (imported, with docstrings) so the notebook stays readable; the from-scratch model is written **in the notebook itself** so the grader sees it.
+**Notebook = the guidelines' 11 steps:** 1 Import libraries · 2 Load the dataset · 3 Explore the data · 4 Preprocess · 5 Define features and target · 6 Chronological train/test split · **7 Algorithm 1 from scratch (class shown in full)** · 8 Random Forest · 9 Evaluate both · 10 Compare · 11 Visualisations. Data cleaning and feature code live in `src/` (imported, with docstrings) so the notebook stays readable. **Changed 18 Oct:** the from-scratch model lives in `src/linear_regression.py` so that `pytest` can test it; notebook section 7 explains the maths step by step and shows the **complete class code** (syntax-highlighted), so the grader still sees all of it.
 
 ## 11. Work split (proposal)
 

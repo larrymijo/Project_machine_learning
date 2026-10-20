@@ -176,6 +176,17 @@ Note for the report: predictions are continuous (e.g. 1.43 goals) and can in pri
 | **Figures** (≈ 6–8) | Score distribution · home advantage · Elo over time for the 10 CONMEBOL teams · gradient-descent loss curve · predicted vs actual · feature importance · error per team |
 | *Bonus* | Predictions for the 2026 World Cup matches of CONMEBOL teams (data after the test window) |
 
+**Status 20 Oct — Phase 4 results (Algorithm 1, test set):**
+
+| | MAE | RMSE | R² home / away | W/D/L acc. |
+|---|---|---|---|---|
+| All 2,269 test matches — scratch LR (λ = 0.01) | 0.93 | 1.23 | 0.29 / 0.23 | 59.9% |
+| All 2,269 test matches — best baseline | 1.07 | 1.43 | 0.01 / 0.00 | 47.0% |
+| 90 CONMEBOL qualifiers — scratch LR | 0.91 | 1.11 | 0.19 / −0.14 | 50.0% |
+| 90 CONMEBOL qualifiers — best baseline | 0.97 | 1.20 | −0.03 / −0.19 | 54.4% |
+
+λ tuning: best λ = 0.01 but only 0.0002 better than λ = 0 (no overfitting). Main limitations found: away goals over-predicted in CONMEBOL qualifiers (0.98 vs 0.60 actual — stronger home advantage than average), no draws predicted (best draw band on training = 0), Bolivia at El Alto (never in training). **Not fixed with new features** — that would be tuning on the test set; goes into the discussion / future work.
+
 ## 10. Repository and notebook structure
 
 ```

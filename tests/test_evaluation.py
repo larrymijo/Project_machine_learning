@@ -62,3 +62,39 @@ def test_time_series_cv_returns_one_score_per_fold():
     Y = X @ np.array([[1.0, 0.5], [0.0, 1.0], [2.0, 0.0]]) + rng.normal(scale=0.1, size=(300, 2))
     scores = time_series_cv(lambda: LinearRegressionScratch(), X, Y, n_splits=5)
     assert scores.shape == (5,) and (scores < 0.2).all()
+
+
+# ---------- added after Gunnar's review of PR #4 ----------
+
+def test_outcomes_exact_equality_and_band_edge():
+    # exactly equal predicted goals are a draw even with draw_band = 0
+    assert list(outcomes([1.5, 0.0], [1.5, 0.0], draw_band=0.0)) == ["D", "D"]
+    # a difference exactly equal to the band is NOT a draw (strict <)
+    assert list(outcomes([1.5], [1.0], draw_band=0.5)) == ["H"]
+    assert list(outcomes([1.0], [1.5], draw_band=0.5)) == ["A"]
+
+
+def test_venue_baseline_with_plain_arrays():
+    X = np.array([[5.0, 0], [6.0, 0], [7.0, 1], [8.0, 1]])     # column 1 = neutral
+    Y = np.array([[2, 0], [2, 2], [1, 1], [3, 1]])
+    with pytest.raises(TypeError, match="neutral"):
+        VenueBaseline().fit(X, Y)
+    pred = VenueBaseline(neutral_index=1).fit(X, Y).predict(X)
+    np.testing.assert_allclose(pred[[0, 2]], [[2, 1], [2, 1]])
+
+
+def test_venue_baseline_empty_group_falls_back_to_the_overall_mean():
+    X = pd.DataFrame({"neutral": [0, 0, 0]})
+    Y = np.array([[1, 0], [2, 1], [3, 2]])
+    model = VenueBaseline().fit(X, Y)
+    np.testing.assert_allclose(model.predict(pd.DataFrame({"neutral": [1]})), [[2, 1]])
+    assert not np.isnan(model.predict(pd.DataFrame({"neutral": [0, 1]}))).any()
+
+
+def test_time_series_cv_rejects_unsorted_dates():
+    rng = np.random.default_rng(1)
+    X, Y = rng.normal(size=(50, 2)), rng.normal(size=(50, 2))
+    dates = pd.date_range("2000-01-01", periods=50)
+    assert len(time_series_cv(lambda: LinearRegressionScratch(), X, Y, dates=dates)) == 5
+    with pytest.raises(ValueError, match="sorted by date"):
+        time_series_cv(lambda: LinearRegressionScratch(), X, Y, dates=dates[::-1])

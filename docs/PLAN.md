@@ -187,6 +187,19 @@ Note for the report: predictions are continuous (e.g. 1.43 goals) and can in pri
 
 λ tuning: best λ = 0.01 but only 0.0002 better than λ = 0 (no overfitting). Main limitations found: away goals over-predicted in CONMEBOL qualifiers (0.98 vs 0.60 actual — stronger home advantage than average), no draws predicted (best draw band on training = 0), Bolivia at El Alto (never in training). **Not fixed with new features** — that would be tuning on the test set; goes into the discussion / future work.
 
+**Status 20 Oct — Phase 5 results (Algorithm 2, Random Forest + tuning):**
+
+Grid search over 54 combinations × 5 `TimeSeriesSplit` folds completed in ~5 min. Best configuration: `n_estimators=500`, `max_depth=10`, `min_samples_leaf=5`, `max_features=0.5`.
+
+| Model | Val RMSE (5 folds) | All Test RMSE | CONMEBOL Test RMSE | Negative Preds | Notes |
+|---|---|---|---|---|---|
+| Random Forest (default) | 1.2752 | 1.2484 | 1.1810 | 0 | Severe overfitting (train RMSE 0.4748, 11,682 leaves/tree) |
+| **Random Forest (tuned)** | **1.2430** | **1.2254** | **1.1388** | **0** | Leaves drop to 399 (−97%), beats default in 5/5 folds |
+| Scratch LR (λ = 0.01) | 1.2528 | 1.2270 | 1.1090 | 117 | Beats baselines, but outputs negative goal predictions |
+| Best baseline | — | 1.4270 | 1.1960 | 0 | Venue baseline |
+
+Key findings: Tuned Random Forest achieves the lowest RMSE across all 2,269 test matches (1.225 vs LR 1.227 and baseline 1.427) and strictly guarantees non-negative predictions (0 vs 117 for linear regression). On the 90 CONMEBOL qualifiers, it improves over the baseline (1.139 vs 1.196) and beats the default RF (1.181). Both algorithms are now ready for comprehensive comparison in Phase 6.
+
 ## 10. Repository and notebook structure
 
 ```

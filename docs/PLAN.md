@@ -189,16 +189,20 @@ Note for the report: predictions are continuous (e.g. 1.43 goals) and can in pri
 
 **Status 20 Oct — Phase 5 results (Algorithm 2, Random Forest + tuning):**
 
-Grid search over 54 combinations × 5 `TimeSeriesSplit` folds completed in ~5 min. Best configuration: `n_estimators=500`, `max_depth=10`, `min_samples_leaf=5`, `max_features=0.5`.
+Grid search over 54 combinations × 5 `TimeSeriesSplit` folds. Best configuration: `n_estimators=500`, `max_depth=10`, `min_samples_leaf=5`, `max_features=0.5`. Run time depends on the parallelism: the largest grid cells (500 trees, no depth limit, leaf size 1) need about 0.9 GB per forest, so the notebook caps the grid search at `GRID_N_JOBS = 3` parallel fits to stay within the memory of a 16 GB laptop. That takes roughly 25 minutes (about 5 minutes with all cores on a machine with enough memory); the results are identical.
 
 | Model | Val RMSE (5 folds) | All Test RMSE | CONMEBOL Test RMSE | Negative Preds | Notes |
 |---|---|---|---|---|---|
 | Random Forest (default) | 1.2752 | 1.2484 | 1.1810 | 0 | Severe overfitting (train RMSE 0.4748, 11,682 leaves/tree) |
-| **Random Forest (tuned)** | **1.2430** | **1.2254** | **1.1388** | **0** | Leaves drop to 399 (−97%), beats default in 5/5 folds |
-| Scratch LR (λ = 0.01) | 1.2528 | 1.2270 | 1.1090 | 117 | Beats baselines, but outputs negative goal predictions |
+| **Random Forest (tuned)** | **1.2430** | 1.2254 | 1.1388 | 0 | Leaves drop to 399 (−97%), beats default in 5/5 folds |
+| Scratch LR (λ = 0.01) | 1.2528 | 1.2271 | **1.1090** | 117 | Beats baselines, but outputs negative goal predictions |
 | Best baseline | — | 1.4270 | 1.1960 | 0 | Venue baseline |
 
-Key findings: Tuned Random Forest achieves the lowest RMSE across all 2,269 test matches (1.225 vs LR 1.227 and baseline 1.427) and strictly guarantees non-negative predictions (0 vs 117 for linear regression). On the 90 CONMEBOL qualifiers, it improves over the baseline (1.139 vs 1.196) and beats the default RF (1.181). Both algorithms are now ready for comprehensive comparison in Phase 6.
+Key findings:
+- **All 2,269 test matches:** the tuned forest (1.2254) and the scratch linear regression (1.2271) are effectively tied; the forest's lead is 0.0017 goals. The forest is clearly better than the baseline (1.4270) and never predicts a negative number of goals (0 vs 117 for the linear model).
+- **90 CONMEBOL qualifiers:** the scratch linear regression is better than the tuned forest on every metric (RMSE 1.109 vs 1.139, MAE 0.907 vs 0.942, R² away −0.14 vs −0.27). The tuned forest still improves on the baseline (1.139 vs 1.196) and on the default forest (1.181).
+- **Away goals:** the forest over-predicts away goals in the CONMEBOL qualifiers even more than the linear model (1.12 goals per match vs 0.98; actual 0.60). This is one of the main findings for our topic and goes into the discussion.
+- Both algorithms are ready for the comprehensive comparison in Phase 6.
 
 ## 10. Repository and notebook structure
 

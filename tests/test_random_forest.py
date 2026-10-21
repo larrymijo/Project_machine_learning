@@ -68,3 +68,58 @@ def test_forest_predictions_stay_within_the_training_range():
     Y = np.clip(Y, 0, None)
     pred = make_forest(n_estimators=20).fit(X, Y).predict(X * 10)   # far outside the training data
     assert (pred >= Y.min(axis=0)).all() and (pred <= Y.max(axis=0)).all()
+
+
+# ---------- grid-search cache (Phase 6) ----------
+from src.random_forest import load_cv_results, save_cv_results
+
+CACHE_GRID = {"n_estimators": [10], "max_depth": [None, 3], "min_samples_leaf": [1], "max_features": [1.0, "sqrt"]}
+
+
+def test_cache_round_trip_keeps_the_parameter_types(tmp_path):
+    X, Y, dates = _data()
+    table = cv_results_table(grid_search_forest(X, Y, dates, param_grid=CACHE_GRID, n_jobs=1))
+    path = tmp_path / "grid.csv"
+    save_cv_results(table, X, Y, path=path, n_jobs=1, minutes=0.1)
+    loaded, meta = load_cv_results(X, Y, path=path, param_grid=CACHE_GRID)
+    assert meta["combinations"] == 4 and meta["rows"] == len(X)
+    pd.testing.assert_frame_equal(loaded.drop(columns=list(CACHE_GRID)), table.drop(columns=list(CACHE_GRID)),
+                                  check_dtype=False)
+    for col in CACHE_GRID:
+        assert loaded[col].tolist() == table[col].tolist()
+    # 1.0 must come back as the float 1.0 ("all features"), not the int 1 ("one feature")
+    assert all(type(v) is float for v in loaded["max_features"] if v != "sqrt")
+    assert loaded["max_depth"].tolist().count(None) == 2
+    best = {p: loaded.loc[0, p] for p in CACHE_GRID}
+    make_forest(n_jobs=1, **best).fit(X, Y)          # the restored values are accepted by scikit-learn
+
+
+def test_cache_refuses_other_data_or_another_grid(tmp_path):
+    X, Y, dates = _data()
+    table = cv_results_table(grid_search_forest(X, Y, dates, param_grid=CACHE_GRID, n_jobs=1))
+    path = tmp_path / "grid.csv"
+    save_cv_results(table, X, Y, path=path)
+    with pytest.raises(ValueError, match="different training data"):
+        load_cv_results(X * 1.01, Y, path=path, param_grid=CACHE_GRID)
+    with pytest.raises(ValueError, match="different parameter grid"):
+        load_cv_results(X, Y, path=path, param_grid={**CACHE_GRID, "min_samples_leaf": [1, 5]})
+
+
+def test_fingerprint_ignores_last_digit_noise_but_not_real_changes():
+    from src.random_forest import data_fingerprint
+    X, Y, _ = _data()
+    base = data_fingerprint(X, Y)
+    assert data_fingerprint(X + 1e-13, Y) == base                 # another NumPy / CPU: last-digit differences
+    assert data_fingerprint(X[::-1], Y[::-1]) != base             # other row order
+    changed = X.copy(); changed[0, 0] += 1e-6
+    assert data_fingerprint(changed, Y) != base                   # a real change in one value
+
+
+def test_cache_reports_a_missing_metadata_file(tmp_path):
+    X, Y, dates = _data()
+    table = cv_results_table(grid_search_forest(X, Y, dates, param_grid=CACHE_GRID, n_jobs=1))
+    path = tmp_path / "grid.csv"
+    save_cv_results(table, X, Y, path=path)
+    path.with_suffix(".json").unlink()
+    with pytest.raises(FileNotFoundError, match="grid.json"):
+        load_cv_results(X, Y, path=path, param_grid=CACHE_GRID)

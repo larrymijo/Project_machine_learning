@@ -1,0 +1,10 @@
+{
+  "fingerprint": "78657889b122cfa91e2fa1ba06e8ba7bbd905253661d47fcc27ad61f5e3a5fde",
+  "rows": 25266,
+  "features": 17,
+  "combinations": 54,
+  "created": "2026-10-21",
+  "grid_n_jobs": 3,
+  "minutes": 20.1,
+  "fingerprint_method": "sha256 of X and Y rounded to 9 decimals"
+}

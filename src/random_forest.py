@@ -16,13 +16,21 @@ Tuning       Grid search with the SAME 5 TimeSeriesSplit folds that were used to
              algorithms can be compared directly. tests/test_random_forest.py checks that the two
              scorers give the same number.
 """
+import hashlib
+import itertools
+import json
+from datetime import date
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 
-from src.data import RANDOM_STATE
+from src.data import PROJECT_ROOT, RANDOM_STATE
 from src.evaluation import check_sorted_by_date
+
+# Cached result of the full grid search (committed to the repo, see save_cv_results / load_cv_results)
+GRID_CACHE = PROJECT_ROOT / "results" / "rf_grid_cv_results.csv"
 
 # The grid from docs/PLAN.md section 8: 2 x 3 x 3 x 3 = 54 combinations, x 5 folds = 270 fits.
 PARAM_GRID = {
@@ -78,3 +86,73 @@ def cv_results_table(search):
     table["train RMSE"] = -res["mean_train_score"]
     table["fit time (s)"] = res["mean_fit_time"]
     return table.sort_values("mean", kind="stable").reset_index(drop=True)
+
+
+# ---------- caching the grid search (Phase 6) ----------
+# The full search takes 20-30 minutes on a 16 GB laptop, and the notebook is run many times. The result
+# table is therefore saved once (CSV, committed) and loaded afterwards. A fingerprint of the training data
+# is stored next to it, so a cache made from different data or features is never used by mistake.
+
+FINGERPRINT_DECIMALS = 9
+
+
+def data_fingerprint(X, Y):
+    """SHA-256 of the training features and targets in row order, rounded to 9 decimals.
+
+    The rounding makes the fingerprint the same on every computer: another NumPy version or CPU can change
+    the last binary digit of a computed feature (about 1e-13 here), which must not invalidate the cache,
+    while any real change in the data, the features or their order still changes the fingerprint."""
+    h = hashlib.sha256()
+    for a in (X, Y):
+        rounded = np.round(np.asarray(a, dtype=float), FINGERPRINT_DECIMALS) + 0.0   # + 0.0 turns -0.0 into 0.0
+        h.update(np.ascontiguousarray(rounded).tobytes())
+    return h.hexdigest()
+
+
+def save_cv_results(table, X, Y, path=GRID_CACHE, n_jobs=None, minutes=None):
+    """Write the cv_results_table to `path` (CSV) and its metadata to the same name with .json."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    table.to_csv(path, index=False)
+    meta = {"fingerprint": data_fingerprint(X, Y), "rows": int(len(X)), "features": int(np.shape(X)[1]),
+            "combinations": int(len(table)), "created": date.today().isoformat(),
+            "grid_n_jobs": n_jobs, "minutes": None if minutes is None else round(minutes, 1)}
+    path.with_suffix(".json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    return meta
+
+
+def _restore(text):
+    """Turn a CSV cell back into the original parameter value.
+    '' or 'None' -> None, '500' -> 500 (int), '0.5' / '1.0' -> float, 'sqrt' -> 'sqrt'.
+    The int/float difference matters: max_features=1.0 means "all features", max_features=1 means one."""
+    if text in ("", "None"):
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        pass
+    try:
+        return float(text)
+    except ValueError:
+        return text
+
+
+def load_cv_results(X, Y, path=GRID_CACHE, param_grid=PARAM_GRID):
+    """Read a cached cv_results_table. Raises FileNotFoundError if the CSV or its .json metadata is missing,
+    and ValueError if it was made from other training data or with another grid - then the search has to be
+    run again."""
+    for required in (path, path.with_suffix(".json")):
+        if not required.exists():
+            raise FileNotFoundError(f"cache file missing: {required.name}")
+    meta = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
+    if meta["fingerprint"] != data_fingerprint(X, Y):
+        raise ValueError("the cached grid search was made with different training data - run it again")
+    table = pd.read_csv(path, dtype=str, keep_default_na=False)
+    for p in param_grid:
+        table[p] = pd.Series([_restore(v) for v in table[p]], dtype=object)
+    for col in table.columns.difference(list(param_grid)):
+        table[col] = table[col].astype(float)
+    cached = {tuple(map(str, row)) for row in table[list(param_grid)].itertuples(index=False)}
+    expected = {tuple(map(str, combo)) for combo in itertools.product(*param_grid.values())}
+    if cached != expected:
+        raise ValueError("the cached grid search used a different parameter grid - run it again")
+    return table, meta

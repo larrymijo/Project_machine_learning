@@ -204,6 +204,22 @@ Key findings:
 - **Away goals:** the forest over-predicts away goals in the CONMEBOL qualifiers even more than the linear model (1.12 goals per match vs 0.98; actual 0.60). This is one of the main findings for our topic and goes into the discussion.
 - Both algorithms are ready for the comprehensive comparison in Phase 6.
 
+**Status 21 Oct — Phase 6, final results (frozen; `results/final_scoreboard.csv`):**
+
+| | Lin. Reg. (scratch) | Random Forest (tuned) | Best baseline |
+|---|---|---|---|
+| Validation RMSE (5 folds) | 1.253 | 1.243 | — |
+| All 2,269 test matches: RMSE / MAE | 1.227 / 0.934 | 1.225 / 0.936 | 1.427 / 1.074 |
+| All: R² home / away | 0.29 / 0.23 | 0.29 / 0.24 | 0.01 / 0.00 |
+| All: W/D/L | 59.9% | 59.5% | 47.0% |
+| 90 CONMEBOL qualifiers: RMSE / MAE | **1.109 / 0.907** | 1.139 / 0.942 | 1.196 / 0.974 |
+| CONMEBOL: W/D/L | 50.0% | 52.2% | 54.4% |
+| Negative predictions | 117 | 0 | 0 |
+
+Paired bootstrap (2,000 resamples): all matches LR − RF RMSE [−0.010, +0.012] → **tie**; CONMEBOL [−0.067, +0.010] → LR better in 93% of samples but **not certain**; both models beat the baseline on all matches (interval far below 0), on CONMEBOL even that is not certain. Both models mainly use the Elo ratings (permutation importance); predictions correlate 0.93 / 0.90. The forest only wins in big mismatches (gap > 400 Elo); it is more cautious (CONMEBOL spread of predicted goal difference 0.73 vs 1.11 for LR vs 1.59 actual). **Choice: linear regression** (equal overall, probably better on CONMEBOL, transparent, fast; clip negatives at 0).
+
+Also done in Phase 6: grid-search cache (Run All ≈ 1–2 min), Gunnar's review points 5–9 from PR #5, sections 10 and 11, guard cells that recompute every number quoted in the text.
+
 ## 10. Repository and notebook structure
 
 ```

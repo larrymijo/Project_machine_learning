@@ -56,6 +56,8 @@ nbstripout --install                # strips notebook outputs from commits
 
 Then download the data (above), open the folder in VS Code, select the `.venv` interpreter and open `notebooks/project.ipynb`. Run the tests with `pytest`.
 
+**Run All takes about 1–2 minutes**, because the random-forest grid search (20–30 minutes on a 16 GB laptop) is loaded from `results/rf_grid_cv_results.csv`. The cache stores a fingerprint of the training data and is refused if the data, features or grid change. Set `RUN_GRID_SEARCH = True` in section 8.3 to run the search again.
+
 ## Project structure
 
 | Path | Contents |
@@ -66,6 +68,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 | `notebooks/project.ipynb` | The submission notebook, following the guidelines' 11-step structure |
 | `src/` | Data loading/cleaning, feature engineering, evaluation helpers |
 | `tests/` | `pytest` checks: from-scratch linear regression and leakage |
+| `results/` | Committed results: the cached grid search and `final_scoreboard.csv` (all final metrics) |
 | `reports/` | Report and presentation |
 
 ## Status
@@ -76,7 +79,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 - [x] Phase 3 — Linear Regression from scratch + tests (18 Oct)
 - [x] Phase 4 — Chronological split, baselines, Algorithm 1 results (20 Oct)
 - [x] Phase 5 — Random Forest + tuning (20 Oct)
-- [ ] Phase 6 — Evaluation, comparison, figures
+- [x] Phase 6 — Evaluation, comparison, figures (21 Oct) — **results frozen**
 - [ ] Phase 7 — Report + final notebook
 - [ ] Submit on Canvas (25 Oct)
 - [ ] Phase 8 — Slides + presentation (27–28 Oct)

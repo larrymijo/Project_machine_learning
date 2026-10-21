@@ -144,3 +144,53 @@ def time_series_cv(make_model, X, Y, n_splits=5, dates=None):
         err = model.predict(X[valid_idx]) - Y[valid_idx]
         scores.append(np.sqrt((err ** 2).mean(axis=0)).mean())
     return np.array(scores)
+
+
+# ---------- comparing two models (Phase 6) ----------
+
+def _per_target_error(y_true, y_pred, metric):
+    err = np.asarray(y_pred, dtype=float) - np.asarray(y_true, dtype=float)
+    if metric == "RMSE":
+        return np.sqrt((err ** 2).mean(axis=-2)).mean(axis=-1)
+    if metric == "MAE":
+        return np.abs(err).mean(axis=-2).mean(axis=-1)
+    raise ValueError("metric must be 'RMSE' or 'MAE'")
+
+
+def bootstrap_difference(y_true, pred_a, pred_b, metric="RMSE", n_boot=2000, seed=42):
+    """Paired bootstrap of  metric(model A) - metric(model B)  (averaged over home and away goals).
+
+    The test matches are resampled with replacement `n_boot` times; both models are scored on the SAME
+    resampled matches each time (paired), so the difficulty of the sample cancels out. Negative = A better.
+    Returns the observed difference, the 95% interval of the bootstrap differences and the share of
+    samples in which A is better. If the interval contains 0, the data can't tell the models apart.
+    """
+    y, a, b = (np.asarray(v, dtype=float) for v in (y_true, pred_a, pred_b))
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(y), size=(n_boot, len(y)))
+    diffs = _per_target_error(y[idx], a[idx], metric) - _per_target_error(y[idx], b[idx], metric)
+    return {"observed": float(_per_target_error(y, a, metric) - _per_target_error(y, b, metric)),
+            "ci_low": float(np.quantile(diffs, 0.025)), "ci_high": float(np.quantile(diffs, 0.975)),
+            "share_a_better": float((diffs < 0).mean())}
+
+
+def permutation_importance(model, X, Y, n_repeats=10, seed=42):
+    """How much the RMSE (average of both targets) grows when one feature column is shuffled.
+
+    Shuffling breaks the link between that feature and the goals while keeping its distribution, so a
+    large increase means the model relies on the feature. Works the same for any model with predict().
+    Returns a DataFrame (one row per feature) with the mean and standard deviation over the repeats.
+    """
+    X = pd.DataFrame(X).reset_index(drop=True)
+    Y = np.asarray(Y, dtype=float)
+    rng = np.random.default_rng(seed)
+    base = _per_target_error(Y, model.predict(X), "RMSE")
+    rows = {}
+    for col in X.columns:
+        increases = []
+        for _ in range(n_repeats):
+            shuffled = X.copy()
+            shuffled[col] = rng.permutation(shuffled[col].to_numpy())
+            increases.append(_per_target_error(Y, model.predict(shuffled), "RMSE") - base)
+        rows[col] = {"RMSE increase": np.mean(increases), "std": np.std(increases)}
+    return pd.DataFrame(rows).T.sort_values("RMSE increase", ascending=False)

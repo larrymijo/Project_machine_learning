@@ -98,3 +98,49 @@ def test_time_series_cv_rejects_unsorted_dates():
     assert len(time_series_cv(lambda: LinearRegressionScratch(), X, Y, dates=dates)) == 5
     with pytest.raises(ValueError, match="sorted by date"):
         time_series_cv(lambda: LinearRegressionScratch(), X, Y, dates=dates[::-1])
+
+
+# ---------- Phase 6: bootstrap and permutation importance ----------
+from src.evaluation import bootstrap_difference, permutation_importance
+
+
+def test_bootstrap_identical_models_give_zero():
+    rng = np.random.default_rng(3)
+    y = rng.poisson(1.3, size=(200, 2))
+    p = y + rng.normal(scale=0.8, size=y.shape)
+    res = bootstrap_difference(y, p, p, n_boot=300)
+    assert res["observed"] == 0 and res["ci_low"] == 0 and res["ci_high"] == 0 and res["share_a_better"] == 0
+
+
+def test_bootstrap_detects_a_clearly_better_model():
+    rng = np.random.default_rng(4)
+    y = rng.poisson(1.3, size=(300, 2)).astype(float)
+    good = y + rng.normal(scale=0.3, size=y.shape)
+    bad = y + rng.normal(scale=1.5, size=y.shape)
+    res = bootstrap_difference(y, good, bad, n_boot=500)
+    assert res["observed"] < 0 and res["ci_high"] < 0 and res["share_a_better"] == 1.0
+    mae = bootstrap_difference(y, good, bad, metric="MAE", n_boot=200)
+    assert mae["ci_high"] < 0
+    with pytest.raises(ValueError):
+        bootstrap_difference(y, good, bad, metric="R2")
+
+
+def test_bootstrap_observed_matches_the_metric_table():
+    rng = np.random.default_rng(5)
+    y = rng.poisson(1.3, size=(100, 2)).astype(float)
+    a, b = y + rng.normal(size=y.shape), y + rng.normal(scale=2, size=y.shape)
+    res = bootstrap_difference(y, a, b, n_boot=50)
+    expected = (regression_metrics(y, a).loc["both (average)", "RMSE"]
+                - regression_metrics(y, b).loc["both (average)", "RMSE"])
+    assert res["observed"] == pytest.approx(expected)
+
+
+def test_permutation_importance_finds_the_relevant_feature():
+    rng = np.random.default_rng(6)
+    X = pd.DataFrame(rng.normal(size=(400, 3)), columns=["signal", "noise1", "noise2"])
+    Y = np.column_stack([2 * X["signal"], -X["signal"]]) + rng.normal(scale=0.1, size=(400, 2))
+    model = LinearRegressionScratch().fit(X, Y)
+    imp = permutation_importance(model, X, Y, n_repeats=5)
+    assert imp.index[0] == "signal"
+    assert imp.loc["signal", "RMSE increase"] > 1.0
+    assert abs(imp.loc["noise1", "RMSE increase"]) < 0.05 and abs(imp.loc["noise2", "RMSE increase"]) < 0.05

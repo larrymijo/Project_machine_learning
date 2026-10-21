@@ -1,0 +1,5 @@
+model,validation RMSE (5 folds),training RMSE,all: RMSE,all: MAE,all: R² home,all: R² away,all: W/D/L %,CONMEBOL: RMSE,CONMEBOL: MAE,CONMEBOL: R² home,CONMEBOL: R² away,CONMEBOL: W/D/L %,negative predictions (all)
+Mean baseline,,1.4692,1.4319,1.079,-0.0,-0.0006,46.981,1.208,0.9965,-0.0192,-0.2654,54.4444,0
+Venue baseline,,1.4651,1.4266,1.0742,0.0096,0.0039,46.981,1.1957,0.9739,-0.0301,-0.1892,54.4444,0
+Linear Regression (scratch),1.2528,1.2657,1.2271,0.9338,0.2914,0.2319,59.9383,1.1092,0.9072,0.1847,-0.1405,50.0,117
+Random Forest (tuned),1.243,1.1533,1.2254,0.9361,0.2892,0.2394,59.4976,1.1388,0.9416,0.1787,-0.2702,52.2222,0

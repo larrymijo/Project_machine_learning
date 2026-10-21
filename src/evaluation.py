@@ -114,6 +114,19 @@ class VenueBaseline:
 
 # ---------- time-series cross-validation (for our own model) ----------
 
+def check_sorted_by_date(dates, n_rows):
+    """Raise a ValueError unless there is one date per row and the dates never go backwards.
+
+    Used before every TimeSeriesSplit (our own loop below and the random-forest grid search):
+    the folds are made from row positions, so unsorted rows would mean training on the future.
+    """
+    dates = pd.Series(np.asarray(dates))
+    if len(dates) != n_rows:
+        raise ValueError("dates must have one value per row of X")
+    if not dates.is_monotonic_increasing:
+        raise ValueError("rows must be sorted by date for time-series cross-validation")
+
+
 def time_series_cv(make_model, X, Y, n_splits=5, dates=None):
     """Fit a fresh model on each TimeSeriesSplit fold; return the validation RMSE (average of both targets)
     per fold. `make_model` is a function that returns a new, unfitted model.
@@ -123,11 +136,7 @@ def time_series_cv(make_model, X, Y, n_splits=5, dates=None):
     train on the future. Pass `dates` (one per row) to have this checked.
     """
     if dates is not None:
-        dates = pd.Series(np.asarray(dates))
-        if len(dates) != len(X):
-            raise ValueError("dates must have one value per row of X")
-        if not dates.is_monotonic_increasing:
-            raise ValueError("rows must be sorted by date for time-series cross-validation")
+        check_sorted_by_date(dates, len(X))
     X, Y = np.asarray(X, dtype=float), np.asarray(Y, dtype=float)
     scores = []
     for train_idx, valid_idx in TimeSeriesSplit(n_splits=n_splits).split(X):

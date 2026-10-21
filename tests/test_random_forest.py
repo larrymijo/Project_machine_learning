@@ -103,3 +103,23 @@ def test_cache_refuses_other_data_or_another_grid(tmp_path):
         load_cv_results(X * 1.01, Y, path=path, param_grid=CACHE_GRID)
     with pytest.raises(ValueError, match="different parameter grid"):
         load_cv_results(X, Y, path=path, param_grid={**CACHE_GRID, "min_samples_leaf": [1, 5]})
+
+
+def test_fingerprint_ignores_last_digit_noise_but_not_real_changes():
+    from src.random_forest import data_fingerprint
+    X, Y, _ = _data()
+    base = data_fingerprint(X, Y)
+    assert data_fingerprint(X + 1e-13, Y) == base                 # another NumPy / CPU: last-digit differences
+    assert data_fingerprint(X[::-1], Y[::-1]) != base             # other row order
+    changed = X.copy(); changed[0, 0] += 1e-6
+    assert data_fingerprint(changed, Y) != base                   # a real change in one value
+
+
+def test_cache_reports_a_missing_metadata_file(tmp_path):
+    X, Y, dates = _data()
+    table = cv_results_table(grid_search_forest(X, Y, dates, param_grid=CACHE_GRID, n_jobs=1))
+    path = tmp_path / "grid.csv"
+    save_cv_results(table, X, Y, path=path)
+    path.with_suffix(".json").unlink()
+    with pytest.raises(FileNotFoundError, match="grid.json"):
+        load_cv_results(X, Y, path=path, param_grid=CACHE_GRID)

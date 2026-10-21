@@ -93,11 +93,19 @@ def cv_results_table(search):
 # table is therefore saved once (CSV, committed) and loaded afterwards. A fingerprint of the training data
 # is stored next to it, so a cache made from different data or features is never used by mistake.
 
+FINGERPRINT_DECIMALS = 9
+
+
 def data_fingerprint(X, Y):
-    """SHA-256 of the training features and targets, as float64 in row order."""
+    """SHA-256 of the training features and targets in row order, rounded to 9 decimals.
+
+    The rounding makes the fingerprint the same on every computer: another NumPy version or CPU can change
+    the last binary digit of a computed feature (about 1e-13 here), which must not invalidate the cache,
+    while any real change in the data, the features or their order still changes the fingerprint."""
     h = hashlib.sha256()
     for a in (X, Y):
-        h.update(np.ascontiguousarray(np.asarray(a, dtype=float)).tobytes())
+        rounded = np.round(np.asarray(a, dtype=float), FINGERPRINT_DECIMALS) + 0.0   # + 0.0 turns -0.0 into 0.0
+        h.update(np.ascontiguousarray(rounded).tobytes())
     return h.hexdigest()
 
 
@@ -129,8 +137,12 @@ def _restore(text):
 
 
 def load_cv_results(X, Y, path=GRID_CACHE, param_grid=PARAM_GRID):
-    """Read a cached cv_results_table. Raises ValueError if it was made from other training data or
-    with another grid - then the search has to be run again."""
+    """Read a cached cv_results_table. Raises FileNotFoundError if the CSV or its .json metadata is missing,
+    and ValueError if it was made from other training data or with another grid - then the search has to be
+    run again."""
+    for required in (path, path.with_suffix(".json")):
+        if not required.exists():
+            raise FileNotFoundError(f"cache file missing: {required.name}")
     meta = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
     if meta["fingerprint"] != data_fingerprint(X, Y):
         raise ValueError("the cached grid search was made with different training data - run it again")

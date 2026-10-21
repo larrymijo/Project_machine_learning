@@ -218,7 +218,7 @@ Key findings:
 
 Paired bootstrap (2,000 resamples): all matches LR − RF RMSE [−0.010, +0.012] → **tie**; CONMEBOL [−0.067, +0.010] → LR better in 93% of samples but **not certain**; both models beat the baseline on all matches (interval far below 0), on CONMEBOL even that is not certain. Both models mainly use the Elo ratings (permutation importance); predictions correlate 0.93 / 0.90. The forest only wins in big mismatches (gap > 400 Elo); it is more cautious (CONMEBOL spread of predicted goal difference 0.73 vs 1.11 for LR vs 1.59 actual). **Choice: linear regression** (equal overall, probably better on CONMEBOL, transparent, fast; clip negatives at 0).
 
-Also done in Phase 6: grid-search cache (Run All ≈ 1–2 min), Gunnar's review points 5–9 from PR #5, sections 10 and 11, guards for every quoted number (179 in total).
+Also done in Phase 6: grid-search cache (Run All ≈ 1–2 min), Gunnar's review points 5–9 from PR #5, sections 10 and 11, guard cells that recompute every number quoted in the text.
 
 ## 10. Repository and notebook structure
 

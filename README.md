@@ -68,7 +68,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 | `notebooks/project.ipynb` | The submission notebook, following the guidelines' 11-step structure |
 | `src/` | Data loading/cleaning, feature engineering, evaluation helpers |
 | `tests/` | `pytest` checks: from-scratch linear regression and leakage |
-| `results/` | Committed results: the cached grid search and `final_scoreboard.csv` (all final metrics) |
+| `results/` | Committed results: `rf_grid_cv_results.csv` (cached grid search), `rf_grid_cv_results.json` (its metadata: training-data fingerprint, date, run time) and `final_scoreboard.csv` (all final metrics) |
 | `reports/` | Report and presentation |
 
 ## Status

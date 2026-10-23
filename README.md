@@ -80,7 +80,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 - [x] Phase 4 — Chronological split, baselines, Algorithm 1 results (20 Oct)
 - [x] Phase 5 — Random Forest + tuning (20 Oct)
 - [x] Phase 6 — Evaluation, comparison, figures (21 Oct) — **results frozen**
-- [ ] Phase 7 — Report + final notebook
+- [x] Phase 7 — Report + final notebook
 - [ ] Submit on Canvas (25 Oct)
 - [ ] Phase 8 — Slides + presentation (27–28 Oct)
 

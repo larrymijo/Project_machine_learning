@@ -21,3 +21,5 @@ reports/*.pdf
 .DS_Store
 Thumbs.db
 ~$*
+~WRL*.tmp
+*.tmp

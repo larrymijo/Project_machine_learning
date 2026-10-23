@@ -43,7 +43,7 @@ The dataset is updated after new matches are played; our version was downloaded 
 
 ## Setup
 
-Requires Python 3.10+.
+Requires **Python 3.12** (tested with 3.12.5 and 3.12.15; pandas 3 needs 3.11 or newer).
 
 ```bash
 git clone https://github.com/larrymijo/Project_machine_learning.git
@@ -56,7 +56,9 @@ nbstripout --install                # strips notebook outputs from commits
 
 Then download the data (above), open the folder in VS Code, select the `.venv` interpreter and open `notebooks/project.ipynb`. Run the tests with `pytest`.
 
-**Run All takes about 1–2 minutes**, because the random-forest grid search (20–30 minutes on a 16 GB laptop) is loaded from `results/rf_grid_cv_results.csv`. The cache stores a fingerprint of the training data and is refused if the data, features or grid change. Set `RUN_GRID_SEARCH = True` in section 8.3 to run the search again.
+`nbstripout` removes outputs from `notebooks/project.ipynb` when it is committed, so the **executed notebook with all outputs and figures** is in `submission/project_executed.ipynb` (and `submission/project_executed.html` for reading in a browser).
+
+**Run All takes about 1–3 minutes**, because the random-forest grid search (20–30 minutes on a 16 GB laptop) is loaded from `results/rf_grid_cv_results.csv`. The cache stores a fingerprint of the training data and is refused if the data, features or grid change. Set `RUN_GRID_SEARCH = True` in section 8.3 to run the search again.
 
 ## Project structure
 
@@ -70,6 +72,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 | `tests/` | `pytest` checks: from-scratch linear regression and leakage |
 | `results/` | Committed results: `rf_grid_cv_results.csv` (cached grid search), `rf_grid_cv_results.json` (its metadata: training-data fingerprint, date, run time) and `final_scoreboard.csv` (all final metrics) |
 | `reports/` | Report and presentation |
+| `submission/` | The notebook executed top to bottom, with outputs (`.ipynb` + `.html`) |
 
 ## Status
 

@@ -288,12 +288,12 @@ Project_machine_learning/
 
 ## 15. Definition of done
 
-- [ ] `notebooks/project.ipynb` runs top to bottom ("Run All") without errors, saved **with outputs**
-- [ ] Algorithm 1 written from scratch, explained, tested; no library regression model used for it
-- [ ] Algorithm 2 trained, tuned, compared before/after
-- [ ] Both models evaluated on the same test sets against the baselines, with MAE/RMSE/R² (+ MSE)
-- [ ] No leakage: chronological split, pre-match features, tests pass (`pytest`)
-- [ ] Figures readable and referenced in the report
+- [x] `notebooks/project.ipynb` runs top to bottom ("Run All") without errors, saved **with outputs** (executed copy in `submission/`, checked on a fresh clone 23 Oct)
+- [x] Algorithm 1 written from scratch, explained, tested; no library regression model used for it
+- [x] Algorithm 2 trained, tuned, compared before/after
+- [x] Both models evaluated on the same test sets against the baselines, with MAE/RMSE/R² (+ MSE)
+- [x] No leakage: chronological split, pre-match features, tests pass (`pytest`)
+- [x] Figures readable and referenced in the report
 - [ ] Report covers all 8 sections, written in our own words; both of us have read all of it
 - [ ] Code + report uploaded to Canvas by **25 Oct**
 - [ ] Slides done; both of us can explain the scratch implementation and every result

@@ -56,9 +56,11 @@ nbstripout --install                # strips notebook outputs from commits
 
 Then download the data (above), open the folder in VS Code, select the `.venv` interpreter and open `notebooks/project.ipynb`. Run the tests with `pytest`.
 
+The notebook is **self-contained**: every function, class and constant it uses is defined in it. It only needs `results.csv` and `former_names.csv` (it looks next to itself, in `data/`, `data/raw/` and `../data/raw/`, and downloads them from the author's GitHub if they are missing).
+
 `nbstripout` removes outputs from `notebooks/project.ipynb` when it is committed, so the **executed notebook with all outputs and figures** is in `submission/project_executed.ipynb` (and `submission/project_executed.html` for reading in a browser).
 
-**Run All takes about 1–3 minutes**, because the random-forest grid search (20–30 minutes on a 16 GB laptop) is loaded from `results/rf_grid_cv_results.csv`. The cache stores a fingerprint of the training data and is refused if the data, features or grid change. Set `RUN_GRID_SEARCH = True` in section 8.3 to run the search again.
+**Run All takes about 1–3 minutes**, because the random-forest grid search (20–30 minutes on a 16 GB laptop) is loaded from `results/rf_grid_cv_results.csv`. The cache stores a fingerprint of the training data; if the file is missing or the data, features or grid have changed, the notebook runs the full search itself and saves it. Set `RUN_GRID_SEARCH = True` in section 8.3 to always run the search again.
 
 ## Project structure
 
@@ -68,7 +70,7 @@ Then download the data (above), open the folder in VS Code, select the `.venv` i
 | `data/processed/` | Feature table built by the notebook (git-ignored) |
 | `docs/PLAN.md` | Project plan |
 | `notebooks/project.ipynb` | The submission notebook, following the guidelines' 11-step structure |
-| `src/` | Data loading/cleaning, feature engineering, evaluation helpers |
+| `src/` | The same code as in the notebook, as modules, so that `pytest` can test it |
 | `tests/` | `pytest` checks: from-scratch linear regression and leakage |
 | `results/` | Committed results: `rf_grid_cv_results.csv` (cached grid search), `rf_grid_cv_results.json` (its metadata: training-data fingerprint, date, run time) and `final_scoreboard.csv` (all final metrics) |
 | `reports/` | Report and presentation |

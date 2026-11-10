@@ -39,6 +39,15 @@ foreach ($f in "results", "goalscorers", "shootouts", "former_names") {
 }
 ```
 
+macOS or Linux, from the repo folder:
+
+```bash
+mkdir -p data/raw
+for f in results goalscorers shootouts former_names; do
+  curl -fsSL "https://raw.githubusercontent.com/martj42/international_results/master/$f.csv" -o "data/raw/$f.csv"
+done
+```
+
 The dataset is updated after new matches are played; our version was downloaded on **13 Oct 2026** (last match 6 Oct 2026).
 
 ## Setup

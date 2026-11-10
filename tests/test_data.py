@@ -2,14 +2,44 @@
 import pandas as pd
 import pytest
 
-from src.data import CONMEBOL, TEST_END, TEST_START, TRAIN_START, RAW_DIR, load_clean, tournament_group
+from src.data import (CONMEBOL, TEST_END, TEST_START, TRAIN_START, RAW_DIR, apply_former_names,
+                      fifa_teams, load_clean, tournament_group)
 
-pytestmark = pytest.mark.skipif(not (RAW_DIR / "results.csv").exists(),
-                                reason="download the dataset into data/raw first (see README)")
+
+def test_former_names_respect_the_date_window():
+    df = pd.DataFrame({
+        "date": pd.to_datetime(["1950-06-01", "2000-06-01"]),
+        "home_team": ["Ireland", "Ireland"],
+        "away_team": ["England", "Éire"],
+    })
+    former = pd.DataFrame({
+        "current": ["Northern Ireland", "Republic of Ireland"],
+        "former": ["Ireland", "Éire"],
+        "start_date": pd.to_datetime(["1882-02-18", "1937-01-01"]),
+        "end_date": pd.to_datetime(["1956-04-11", "1953-03-25"]),
+    })
+    out, n_renamed = apply_former_names(df, former)
+    assert n_renamed == 1
+    assert out["home_team"].tolist() == ["Northern Ireland", "Ireland"]
+    assert out["away_team"].tolist() == ["England", "Éire"]   # Éire is outside its window
+    assert df["home_team"].tolist() == ["Ireland", "Ireland"]  # the input is not modified
+
+
+def test_fifa_filter_ignores_official_matches_after_the_cutoff():
+    df = pd.DataFrame({
+        "date": pd.to_datetime(["2020-01-01", "2024-06-01"]),
+        "home_team": ["Catalonia", "Catalonia"],
+        "away_team": ["Corsica", "Spain"],
+        "tournament": ["Friendly", "FIFA World Cup qualification"],
+    })
+    assert fifa_teams(df, before=TEST_START) == set()
+    assert fifa_teams(df) == {"Catalonia", "Spain"}
 
 
 @pytest.fixture(scope="module")
 def clean():
+    if not (RAW_DIR / "results.csv").exists():
+        pytest.skip("download the dataset into data/raw first (see README)")
     df, _ = load_clean()
     return df
 

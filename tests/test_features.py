@@ -70,6 +70,22 @@ def test_venue_and_importance_columns():
     assert list(feat["is_qualifier"]) == [0, 1, 0, 0]
 
 
+def test_altitude_uses_country_and_keeps_sea_level_cities_at_zero():
+    """León, Mexico is high; León, Spain is not. Lima and Guayaquil stay at 0."""
+    from src.features import VENUE_ALTITUDE_M
+    matches = toy_matches()
+    matches["city"] = ["Windhoek", "León", "León", "Lima"]
+    matches["country"] = ["Namibia", "Mexico", "Spain", "Peru"]
+    feat = build_features(matches)
+    assert feat["altitude_km"].iloc[0] == pytest.approx(VENUE_ALTITUDE_M[("Windhoek", "Namibia")] / 1000)
+    assert feat["altitude_km"].iloc[1] == pytest.approx(1.815)
+    assert feat["altitude_km"].iloc[2] == 0
+    assert feat["altitude_km"].iloc[3] == 0
+    for key in [("Maseru", "Lesotho"), ("Asmara", "Ethiopia"), ("Sana'a", "Yemen AR"),
+                ("Loja", "Ecuador"), ("Abha", "Saudi Arabia")]:
+        assert VENUE_ALTITUDE_M[key] >= 1500
+
+
 def test_no_leakage_from_the_match_itself_or_later_matches():
     """Changing the score of match i must not change the features of matches 0..i."""
     base = toy_matches()

@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.evaluation import (MeanBaseline, VenueBaseline, choose_draw_band, outcome_scores, outcomes,
-                            regression_metrics, time_series_cv)
+from src.evaluation import (MeanBaseline, VenueBaseline, choose_draw_band, clip_goals, outcome_scores,
+                            outcomes, regression_metrics, time_series_cv)
 from src.linear_regression import LinearRegressionScratch
 
 
@@ -37,6 +37,13 @@ def test_choose_draw_band_finds_the_best_band():
     band = choose_draw_band(y_true, y_pred)
     assert 0.3 < band <= 1.4                     # must cover the 0.3 gap but not the 1.4 gap
     assert outcome_scores(y_true, y_pred, band)["W/D/L accuracy"] == 1.0
+
+
+def test_clip_goals_removes_negatives_and_keeps_the_rest():
+    raw = np.array([[1.4, -0.3], [0.0, 2.2]])
+    clipped = clip_goals(raw)
+    np.testing.assert_allclose(clipped, [[1.4, 0.0], [0.0, 2.2]])
+    assert regression_metrics(np.array([[1, 0], [0, 2]]), clipped).loc["away goals", "MAE"] == pytest.approx(0.1)
 
 
 def test_outcome_scores_rounding_and_negatives():

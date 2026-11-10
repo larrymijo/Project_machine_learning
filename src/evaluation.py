@@ -52,6 +52,16 @@ def choose_draw_band(y_true, y_pred, bands=np.arange(0, 1.01, 0.05)):
     return float(bands[int(np.argmax(acc))])
 
 
+def clip_goals(y_pred):
+    """Set negative goal predictions to 0.
+
+    The linear model has no lower bound, so a heavy away favourite can be predicted a negative
+    number of goals. Clipping is a report of the scoreline, not a new fit: keep the raw
+    predictions when measuring how often the model goes below zero.
+    """
+    return np.clip(np.asarray(y_pred, dtype=float), 0, None)
+
+
 def outcome_scores(y_true, y_pred, draw_band):
     """Win/draw/loss accuracy and exact-score hit rate (predictions rounded, negatives set to 0)."""
     y_true, y_pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)

@@ -29,18 +29,29 @@ FORM_WINDOW = 10
 H2H_WINDOW = 5
 
 # Approximate city elevations (m) of venues at 1,500 m or higher that occur in the data.
-# Keyed by (city, country) because some names exist twice (Cuenca, Guadalajara are also in Spain).
-# Values are rounded city elevations (about +-50-100 m); every other venue counts as 0.
+# Keyed by (city, country) because some names exist twice (Cuenca and Guadalajara are also in
+# Spain; León in Mexico is high, León in Spain is not). Values are rounded city elevations
+# (about +-50-100 m); every other venue counts as 0.
+# The second block is venues the first pass missed. They are mostly outside CONMEBOL, but leaving
+# them at 0 taught the model that those matches were played at sea level.
 VENUE_ALTITUDE_M = {
     ("El Alto", "Bolivia"): 4090, ("Oruro", "Bolivia"): 3735, ("La Paz", "Bolivia"): 3640,
     ("Cusco", "Peru"): 3400, ("Quito", "Ecuador"): 2850, ("Sucre", "Bolivia"): 2810,
     ("Latacunga", "Ecuador"): 2750, ("Toluca", "Mexico"): 2660, ("Bogotá", "Colombia"): 2640,
     ("Ambato", "Ecuador"): 2580, ("Cochabamba", "Bolivia"): 2560, ("Cuenca", "Ecuador"): 2560,
-    ("Addis Ababa", "Ethiopia"): 2355, ("Arequipa", "Peru"): 2335, ("Thimphu", "Bhutan"): 2330,
-    ("Asmara", "Eritrea"): 2325, ("Sana'a", "Yemen"): 2250, ("Mexico City", "Mexico"): 2240,
-    ("Manizales", "Colombia"): 2150, ("Puebla", "Mexico"): 2135, ("Tarija", "Bolivia"): 1850,
+    ("Azogues", "Ecuador"): 2520, ("Addis Ababa", "Ethiopia"): 2355, ("Arequipa", "Peru"): 2335,
+    ("Thimphu", "Bhutan"): 2330, ("Asmara", "Eritrea"): 2325, ("Asmara", "Ethiopia"): 2325,
+    ("Sana'a", "Yemen"): 2250, ("Sana'a", "Yemen AR"): 2250, ("Texcoco", "Mexico"): 2250,
+    ("Mexico City", "Mexico"): 2240, ("Nezahualcóyotl", "Mexico"): 2240, ("Pachuca", "Mexico"): 2400,
+    ("Loja", "Ecuador"): 2060, ("Manizales", "Colombia"): 2150, ("Puebla", "Mexico"): 2135,
+    ("Morelia", "Mexico"): 1920, ("Aguascalientes", "Mexico"): 1890, ("Taif", "Saudi Arabia"): 1879,
+    ("San Luis Potosí", "Mexico"): 1865, ("Tarija", "Bolivia"): 1850, ("Nakuru", "Kenya"): 1850,
+    ("Querétaro", "Mexico"): 1820, ("León", "Mexico"): 1815, ("Bahir Dar", "Ethiopia"): 1800,
     ("Nairobi", "Kenya"): 1795, ("Kabul", "Afghanistan"): 1790, ("Johannesburg", "South Africa"): 1753,
-    ("Kigali", "Rwanda"): 1567, ("Guadalajara", "Mexico"): 1566,
+    ("Irapuato", "Mexico"): 1725, ("Lubango", "Angola"): 1720, ("Hawassa", "Ethiopia"): 1710,
+    ("Adama", "Ethiopia"): 1710, ("Windhoek", "Namibia"): 1655, ("Machakos", "Kenya"): 1620,
+    ("Maseru", "Lesotho"): 1600, ("Zapopan", "Mexico"): 1570, ("Kigali", "Rwanda"): 1567,
+    ("Guadalajara", "Mexico"): 1566, ("Abha", "Saudi Arabia"): 2270,
 }
 
 IMPORTANCE_DUMMIES = {"World Cup": "is_world_cup", "Continental final": "is_continental_final",

@@ -46,26 +46,38 @@ def load_former_names(raw_dir=RAW_DIR):
 
 
 def apply_former_names(df, former):
-    """Rename former team names to the current name, so a team keeps one identity over time.
+    """Rename a former team name only inside its own [start_date, end_date].
 
-    Returns (df, n_renamed). With the 13 Oct 2026 download no former name occurs in
-    results.csv, so n_renamed is 0 - the function is kept so the check stays visible.
+    A global replace would turn every "Ireland" into "Northern Ireland", including matches
+    played after 1956. Returns (df, n_renamed), where n_renamed counts matches with at least
+    one side renamed. The input frame is left unchanged. With the 13 Oct 2026 download no
+    former name occurs in results.csv, so n_renamed is 0.
     """
-    mapping = dict(zip(former["former"], former["current"]))
-    renamed = df["home_team"].isin(mapping) | df["away_team"].isin(mapping)
-    df = df.assign(home_team=df["home_team"].replace(mapping),
-                   away_team=df["away_team"].replace(mapping))
+    df = df.copy()
+    renamed = pd.Series(False, index=df.index)
+    for row in former.itertuples(index=False):
+        in_window = (df["date"] >= row.start_date) & (df["date"] <= row.end_date)
+        for side in ("home_team", "away_team"):
+            hit = in_window & (df[side] == row.former)
+            renamed |= hit
+            df.loc[hit, side] = row.current
     return df, int(renamed.sum())
 
 
-def fifa_teams(df):
+def fifa_teams(df, before=None):
     """Teams that have played at least one World Cup or World Cup qualifier.
 
     Used as a data-driven definition of "FIFA member national team": it excludes regional and
     unrecognised teams (Catalonia, Corsica, Tibet, ...) from tournaments such as the Island
     Games or the CONIFA World Football Cup.
+
+    `before` limits the scan to matches on dates strictly earlier than that timestamp.
+    clean_results passes the test-window start, so a team cannot enter the training set
+    because of a World Cup it only plays later.
     """
     official = df["tournament"].isin([WORLD_CUP, WCQ])
+    if before is not None:
+        official = official & (df["date"] < before)
     return set(df.loc[official, "home_team"]) | set(df.loc[official, "away_team"])
 
 
@@ -97,7 +109,7 @@ def clean_results(df, former=None):
         df, n_renamed = apply_former_names(df, former)
         notes.append(f"Matches with a former team name renamed: {n_renamed}")
 
-    fifa = fifa_teams(df)
+    fifa = fifa_teams(df, before=TEST_START)
     all_teams = set(df["home_team"]) | set(df["away_team"])
     keep = df["home_team"].isin(fifa) & df["away_team"].isin(fifa)
     notes.append(f"Kept the {len(fifa)} teams that have played a World Cup (qualifier); "
